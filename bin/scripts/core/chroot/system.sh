@@ -3,6 +3,7 @@
 installServer="$1"
 locale="$2"
 DistroName="$3"
+cpuType="$4"
 
 
 DistroNameLower="$(echo "$DistroName" | tr '[:upper:]' '[:lower:]')"
@@ -16,7 +17,7 @@ fi
 sed -r -i "s/^(127\.0\.0\.1|::1)(\s*)localhost$/\1\2$DistroNameLower localhost/m" /etc/hosts
 
 
-emerge --noreplace net-misc/netifrc
+emerge --noreplace --quiet net-misc/netifrc
 
 
 #todo: automate dhcp config
@@ -54,18 +55,18 @@ fi
 
 
 # install logger
-emerge app-admin/sysklogd
+emerge --quiet app-admin/sysklogd
 rc-update add sysklogd default
 
 # install cron
-emerge sys-process/cronie
+emerge --quiet sys-process/cronie
 rc-update add cronie default
 
 # file indexing
-emerge sys-apps/mlocate
+emerge --quiet sys-apps/mlocate
 
 # bash completion
-emerge app-shells/bash-completion
+emerge --quiet app-shells/bash-completion
 
 if [ "$installServer" = "y" ]; then
   rc-update add sshd default
@@ -94,15 +95,37 @@ if [ "$installServer" = "y" ]; then
 fi
 
 # install dhcp client and wireless tools
-emerge net-misc/dhcpcd
-emerge net-wireless/iw net-wireless/wpa_supplicant
+emerge --quiet net-misc/dhcpcd
+emerge --quiet net-wireless/iw net-wireless/wpa_supplicant
 
 
 # install grub
-emerge --newuse --deep sys-boot/grub
-emerge --newuse sys-boot/os-prober
+emerge --newuse --deep --quiet sys-boot/grub
+emerge --newuse --quiet sys-boot/os-prober
 
-#todo: detect cpu type
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id="$DistroName" --removable
+grub-install --target="$cpuType-efi" --efi-directory=/boot --bootloader-id="$DistroName" --removable
+# grub-install --target="$cpuType-efi" --efi-directory=/boot --bootloader-id="$DistroName" --removable --uefi-secure-boot
+
+
+#todo: for dule booting windows
+echo '' >> /etc/default/grub
+echo '# More Options' >> /etc/default/grub
+echo 'GRUB_DISABLE_OS_PROBER=false' >> /etc/default/grub
+
+grubTimeout="5"
+if [ "$(grep "^#*GRUB_TIMEOUT=" /etc/default/grub)" != "" ]; then
+  sed -r -i "s/^#*GRUB_TIMEOUT=.*$/GRUB_TIMEOUT=$grubTimeout/m" /etc/default/grub
+else
+  echo "GRUB_TIMEOUT=$grubTimeout" >> /etc/default/grub
+fi
+
+if [ "$(grep "^#*GRUB_TIMEOUT_STYLE=" /etc/default/grub)" != "" ]; then
+  sed -r -i 's/^#*GRUB_TIMEOUT_STYLE=.*$/GRUB_TIMEOUT_STYLE=menu/m' /etc/default/grub
+else
+  echo 'GRUB_TIMEOUT_STYLE=menu' >> /etc/default/grub
+fi
+
+#todo: look at "GRUB_DISTRIBUTOR" option, and see if Gentoo can be replaced with a custom name
+
 
 grub-mkconfig -o /boot/grub/grub.cfg

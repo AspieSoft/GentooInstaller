@@ -10,6 +10,7 @@ if ! [ "$2" = "--resume" ]; then
   continent="$5"
   locale="$6"
   DistroName="$7"
+  cpuType="$8"
 
   # copy nececary scripts
   mkdir -p /mnt/gentoo/gentoo-installer/scripts
@@ -32,6 +33,7 @@ if ! [ "$2" = "--resume" ]; then
   echo "$installDisk" > /mnt/gentoo/gentoo-installer/var/installDisk
   echo "$installServer" > /mnt/gentoo/gentoo-installer/var/installServer
   echo "$DistroName" > /mnt/gentoo/gentoo-installer/var/DistroName
+  echo "$cpuType" > /mnt/gentoo/gentoo-installer/var/cpuType
 fi
 
 # mounting necesay filesystems

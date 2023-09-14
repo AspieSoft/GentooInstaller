@@ -160,34 +160,53 @@ else
   fi
 fi
 
-
 # auto detect cpu type or ask user
 if ! [ "$(lscpu | grep "[Ii]ntel")" = "" ]; then
   if [ "$(lscpu | grep "64-bit")" ]; then
     cpuType="amd64"
+    realCPUType="x86_64"
   else
     cpuType="x86"
     cpuType2="i686"
+    realCPUType="i686"
   fi
 elif ! [ "$(lscpu | grep "[Aa][Mm][Dd]")" = "" ]; then
   cpuType="amd64"
+  realCPUType="amd64"
 elif ! [ "$(lscpu | grep "[Aa][Rr][Mm]")" = "" ]; then
   if [ "$(lscpu | grep "64-bit")" ]; then
     cpuType="arm64"
+    realCPUType="arm64"
   else
     cpuType="arm"
+    realCPUType="arm"
   fi
 else
   read -p "Select CPU Type: " cpuType
   if [ "$cpuType" = "" ] || ! [[ "$cpuType" =~ ^[A-Za-z0-9]*$ ]]; then
     echo "Error: Invalid CPU Type!"
-    echo "example: amd64, arm64"
+    echo "example: amd64, arm64, arm, x86_64, x86, i686"
+    echo "alias: intel64, intel"
     exit
   fi
 fi
 
 if [ "$cpuType2" = "" ]; then
-  cpuType2="$cpuType"
+  if [ "$cpuType" = "intel64" -o "$cpuType" = "x86_64" ]; then
+    cpuType="amd64"
+    cpuType2="i686"
+    realCPUType="x86_64"
+  elif [ "$cpuType" = "intel" -o "$cpuType" = "x86" -o "$cpuType" = "i686" ]; then
+    cpuType="x86"
+    cpuType2="i686"
+    realCPUType="i686"
+  else
+    cpuType2="$cpuType"
+  fi
+fi
+
+if [ "$realCPUType" = "" ]; then
+  realCPUType="$cpuType2"
 fi
 
 
@@ -231,6 +250,6 @@ source "$dir/bin/scripts/core/tarball.sh" "$dir" "$cpuType" "$cpuType2" "$stage3
 
 source "$dir/bin/scripts/core/setup.sh" "$dir" "$installServer"
 
-source "$dir/bin/scripts/core/chroot.sh" "$dir" "$installDisk" "$installServer" "$timezone" "$continent" "$locale" "$DistroName"
+source "$dir/bin/scripts/core/chroot.sh" "$dir" "$installDisk" "$installServer" "$timezone" "$continent" "$locale" "$DistroName" "$realCPUType"
 
 source "$dir/bin/scripts/core/cleanup.sh"
