@@ -43,7 +43,7 @@ sed -r -i 's/^retry=.*$/retry=3/m' /etc/security/passwdqc.conf
 
 
 #todo: ask seperately for a keyboard layout (instead of guessing based on locale)
-nano /etc/conf.d/keymaps
+# nano /etc/conf.d/keymaps
 keymap="$(echo "$locale" | sed -E 's/^[a-z]+_([A-Z]+)$/\1/' | tr '[:upper:]' '[:lower:]')"
 if [ "$keymap" != "" ]; then
   sed -r -i "s/^keymap=\".*\"$/keymap=\"$keymap\"/m" /etc/conf.d/keymaps
