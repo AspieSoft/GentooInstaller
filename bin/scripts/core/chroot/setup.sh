@@ -13,7 +13,7 @@ DistroName="$(cat "$dir/var/DistroName")"
 cpuType="$(cat "$dir/var/cpuType")"
 
 
-if ! [ "$(ls "$dir/running.resume" 2>/dev/null)" != "" -a "$(cat "$dir/running.resume")" = "Gentoo Installer: running emerge @world" ]; then
+if ! [ "$(ls "$dir/running.resume" 2>/dev/null)" != "" -a "$(cat "$dir/running.resume" 2>/dev/null)" = "Gentoo Installer: running emerge @world" ]; then
   # move and link directories
   # this allows some root directories to be moved within the btrfs partition, instead of the xfs partition
   mv /home /var/home

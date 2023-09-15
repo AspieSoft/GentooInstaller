@@ -3,7 +3,7 @@
 cd $(dirname "$0")
 dir="$PWD"
 
-if [ "$(ls "/mnt/gentoo/gentoo-installer/running.resume" 2>/dev/null)" != "" -a "$(cat "/mnt/gentoo/gentoo-installer/running.resume")" = "Gentoo Installer: running emerge @world" ]; then
+if [ "$(ls "/mnt/gentoo/gentoo-installer/running.resume" 2>/dev/null)" != "" -a "$(cat "/mnt/gentoo/gentoo-installer/running.resume" 2>/dev/null)" = "Gentoo Installer: running emerge @world" ]; then
   locale="$(cat "/mnt/gentoo/gentoo-installer/var/locale")"
   #todo: set script to use $locale as language
   
