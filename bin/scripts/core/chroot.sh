@@ -51,7 +51,7 @@ mount --types tmpfs --options nosuid,nodev,noexec shm /dev/shm
 chmod 1777 /dev/shm /run/shm &>/dev/null
 
 # enter new environment
-chroot /mnt/gentoo /bin/bash /gentoo-installer/setup.sh
+chroot /mnt/gentoo /bin/bash /gentoo-installer/scripts/core/setup.sh
 
 # after chroot exits
 cd
