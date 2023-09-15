@@ -8,7 +8,7 @@ installID="$5"
 
 cd /mnt/gentoo
 
-if [ "$(ls "$dir/bin/cache/stage3-${cpuType2}-${stage3File}-${installID}")" != "" ]; then
+if [ "$(ls "$dir/bin/cache/stage3-${cpuType2}-${stage3File}-${installID}" 2>/dev/null)" != "" ]; then
   cp "$dir/bin/cache/stage3-${cpuType2}-${stage3File}-${installID}" .
 else
   # downlload and verify files
