@@ -228,7 +228,8 @@ for tarball in $(cat "$dir/config/tarball.conf"); do
   fi
 
   stage3File="$tarball"
-  installID="$(curl -sL "https://distfiles.gentoo.org/releases/${cpuType}/autobuilds/current-stage3-${cpuType2}-${stage3File}" | grep "stage3-${cpuType2}-${stage3File}-[A-Za-z0-9]*\.tar\." | head -n1 | sed -E "s/^.*?stage3-${cpuType2}-${stage3File}-([A-Za-z0-9]*)\.tar\.([A-Za-z0-9]*).*$/\1.tar.\2/")"
+  # installID="$(curl -sL "https://distfiles.gentoo.org/releases/${cpuType}/autobuilds/current-stage3-${cpuType2}-${stage3File}" | grep "stage3-${cpuType2}-${stage3File}-[A-Za-z0-9]*\.tar\." | head -n1 | sed -E "s/^.*?stage3-${cpuType2}-${stage3File}-([A-Za-z0-9]*)\.tar\.([A-Za-z0-9]*).*$/\1.tar.\2/")"
+  installID="$(curl -sL "https://distfiles.gentoo.org/releases/${cpuType}/autobuilds/current-stage3-${cpuType2}-${stage3File}/latest-stage3-${cpuType2}-${stage3File}.txt" | grep "stage3-${cpuType2}-${stage3File}-[A-Za-z0-9]*\.tar\." | sed -E "s/^.*?stage3-${cpuType2}-${stage3File}-([A-Za-z0-9]*)\.tar\.([A-Za-z0-9]*).*$/\1.tar.\2/")"
   if [ "$installID" != "" ]; then
     break
   fi
