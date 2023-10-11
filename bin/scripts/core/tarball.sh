@@ -72,5 +72,6 @@ else
 fi
 
 # unzip files
+echo "Installing Tarball: $stage3File..."
 tar xpf stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner &>/dev/null
 rm -f "stage3-${cpuType2}-${stage3File}-${installID}"

@@ -243,6 +243,8 @@ if [ "$installID" = "" ] || ! [[ "$installID" =~ ^[A-Za-z0-9\.]*$ ]]; then
   exit
 fi
 
+echo "Selected Tarball: $stage3File"
+
 
 source "$dir/bin/scripts/core/disk.sh" "$installDisk" "$gameSize" "$winPart" "$DistroName"
 
