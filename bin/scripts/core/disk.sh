@@ -18,7 +18,7 @@ memTotal="$(grep MemTotal /proc/meminfo | sed -E 's/^.*?\s+([0-9]+).*$/\1/')"
 memTotal="$((memTotal / 1000))"
 
 # get disk mb
-maxDiskSize="$(lsblk -nlo size /dev/mmcblk0 | head -n1 | sed -E 's/\.[0-9]+([MG])$/\1/')"
+maxDiskSize="$(lsblk -nlo size "/dev/$installDisk" | head -n1 | sed -E 's/\.[0-9]+([MG])$/\1/')"
 if [[ "$maxDiskSize" =~ ^[0-9]+[MG]$ ]]; then
   if [[ "$maxDiskSize" =~ G$ ]]; then
     maxDiskSize="$(echo "$maxDiskSize" | sed -e 's/[MG]$//')"
