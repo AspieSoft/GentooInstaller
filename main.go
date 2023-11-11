@@ -545,7 +545,7 @@ func logData(msg string, noln ...bool){
 func logErr(err error, fatal ...bool){
 	installProgressPrintEnabled = false
 	time.Sleep(100 * time.Millisecond)
-	
+
 	fmt.Print(strings.Repeat(" ", maxTerminalSize)+"\r")
 
 	if logFile != nil {

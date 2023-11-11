@@ -146,7 +146,7 @@ func chrootSetupBoot_noefi(installDisk string, diskParts diskPartList, cpu cpuTy
 		`  initrd=/boot/`, initRamFS, '\n',
 		`  append="init=/bin/bb"`, '\n',
 	)...)
-	
+
 	chrootProgressAdd(100)
 
 	os.WriteFile("/etc/lilo.conf", liloConf, 0644)
