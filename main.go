@@ -19,9 +19,9 @@ import (
 
 const distroName = "Empoleos"
 
-const rsyncMirror = ""
-// const rsyncMirror = "rsync://127.0.0.1/gentoo-portage"
-// const rsyncMirror = "rsync://mirrors.mit.edu/gentoo-portage"
+var rsyncMirror = ""
+// var rsyncMirror = "rsync://127.0.0.1/gentoo-portage"
+// var rsyncMirror = "rsync://mirrors.mit.edu/gentoo-portage"
 
 const highTemp uint = 64
 const lowTemp uint = 56
@@ -98,6 +98,14 @@ func main(){
 
 	if args["usb"] == "true" || args["u"] == "true" || args["removable"] == "true" || args["r"] == "true" {
 		installUSB = true
+	}
+
+	if val, ok := args["rsync-mirror"]; ok {
+		rsyncMirror = string(regex.Comp(`[^\w_\-\\\/:\.]`).RepStrLit([]byte(val), []byte{}))
+	}else if val, ok := args["rsync"]; ok {
+		rsyncMirror = string(regex.Comp(`[^\w_\-\\\/:\.]`).RepStrLit([]byte(val), []byte{}))
+	}else if val, ok := args["mirror"]; ok {
+		rsyncMirror = string(regex.Comp(`[^\w_\-\\\/:\.]`).RepStrLit([]byte(val), []byte{}))
 	}
 
 	//todo: let user select openrc or systemd
