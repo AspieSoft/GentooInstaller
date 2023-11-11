@@ -383,7 +383,7 @@ func chrootInstallMirrors(locale localeInfo) error {
 	fs.Copy("/usr/share/portage/config/repos.conf", "/etc/portage/repos.conf/gentoo.conf")
 
 	if rsyncMirror != "" {
-		regex.Comp(`(sync-uri\s*=\s*).*?\n`).RepFileStr("/etc/portage/repos.conf/gentoo.conf", []byte("$1"+strings.ReplaceAll(rsyncMirror, "\"'`\r\n\t\v\a\b \\/", "")+"\n"), false)
+		regex.Comp(`(?m)^(sync-uri\s*=\s*).*$`).RepFileStr("/etc/portage/repos.conf/gentoo.conf", []byte("$1"+strings.ReplaceAll(rsyncMirror, "\"'`\r\n\t\v\a\b \\/", "")+"\n"), false)
 	}
 
 	return nil
