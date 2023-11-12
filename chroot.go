@@ -894,9 +894,9 @@ func chrootSetupSystem(locale localeInfo, tarName string) error {
 	appProgress += 1000
 
 
-	// install app-admin/sudo
-	installApps = append(installApps, `app-admin/sudo`)
-	appProgress += 1000
+	//todo: install app-admin/sudo
+	// installApps = append(installApps, `app-admin/sudo`)
+	// appProgress += 1000
 
 
 	// install apps from list
