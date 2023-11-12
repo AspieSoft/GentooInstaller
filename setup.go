@@ -192,6 +192,8 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		" symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
 	)
 
+	//todo: config clamav https://wiki.gentoo.org/wiki/ClamAV
+
 	//? secureboot
 
 	// jit javascript ruby lua webkit
