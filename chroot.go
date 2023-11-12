@@ -472,7 +472,7 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 	}
 
 	// install ccache
-	if diskParts.home != "" {
+	/* if diskParts.home != "" {
 		cacheSize := "2G"
 		if out, err := bash.Run([]string{`lsblk`, `-linbo`, `size`, `/dev/`+diskParts.home}, "", nil); err == nil {
 			if size := goutil.Conv.ToUint(out); size != 0 {
@@ -523,7 +523,7 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 				), 0644)
 			}
 		}
-	}
+	} */
 
 	chrootProgressAdd(1000)
 
