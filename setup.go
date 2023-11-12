@@ -216,7 +216,49 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 	//?removed kernel-install dist-kernel kernel-open modules modules-sign
 	// useFlags := []byte("boot gnuefi selinux make cryptsetup curl openssl pcre policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs device-mapper efiemu mount nls sdl dns network tools truetype overlay container-init git python python3 sql go nodejs java brotli gzip zlib ffmpeg multimedia opengl video sound png jpeg webp webm weba mp3 mp4 ogg wav svg xml corefonts fontconfig -apparmor -qt5 -qtwayland -qtwebenging -webenging")
 	//?added -gcc -cmake
-	useFlags := []byte("-gcc -cmake boot gnuefi selinux make cryptsetup curl openssl pcre policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs device-mapper efiemu mount nls sdl dns network tools truetype overlay container-init git python python3 sql go nodejs java brotli gzip zlib ffmpeg multimedia opengl video sound png jpeg webp webm weba mp3 mp4 ogg wav svg xml corefonts fontconfig -apparmor -qt5 -qtwayland -qtwebenging -webenging")
+	// useFlags := []byte("-gcc -cmake boot gnuefi selinux make cryptsetup curl openssl pcre policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs device-mapper efiemu mount nls sdl dns network tools truetype overlay container-init git python python3 sql go nodejs java brotli gzip zlib kernel-install dist-kernel kernel-open modules modules-sign ffmpeg multimedia opengl video sound png jpeg webp webm weba mp3 mp4 ogg wav svg xml corefonts fontconfig -apparmor -qt5 -qtwayland -qtwebenging -webenging")
+
+	useFlags := regex.JoinBytes(
+		// core
+		"boot kernel-install dist-kernel kernel-open modules modules-sign gnuefi efiemu mount nls sdl selinux hardened policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs device-mapper tools truetype overlay container-init -apparmor -qt5 -qtwayland -qtwebenging -webenging",
+		// lang
+		" make pcre curl git python python3 sql sqlite go nodejs java javascript ruby lua webkit",
+		// security
+		" cryptsetup openssl clamav crypt ssl session strip tcmalloc tcpd gcr skey -telemetry",
+		// performance
+		" jit smp sockets dri atm adns vc",
+		// net
+		" dns network ssh ftp sockets soap snmp ipv6 libwww sctp idn",
+		// tools
+		" utils encode emacs bash-completion geoip geolocation hddtemp scanner readline spell inotify dv",
+		// media
+		" ffmpeg multimedia opengl video sound png jpeg webp webm weba mp3 mp4 ogg wav svga xml corefonts fontconfig gif wavpack cgi fastcgi iconv aac flac tiff",
+		// compression
+		" brotli gzip zlib",
+		// other
+		" symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
+	)
+
+	//? secureboot
+
+	// jit javascript ruby lua webkit
+	// hardened clamav
+	// utils -svg svga
+	// magic cgi fastcgi
+	// crypt encode emacs bash-completion geoip geolocation hddtemp wavpack ssl
+	// scanner readline
+	// session strip symlink
+	// smp snmp soap sockets spell sqlite
+	// ftp cxx cvs gif iconv icu idn inotify ipv6 libwww
+	// dri atm adns acpi aac djvu expat exif dv
+	// flac sctp
+	// ssh tidy tiff xattr vc
+
+	//security: tcmalloc tcpd -telemetry gcr skey
+
+	//?desktop: dga calendar alsa accessibility aalib cups dvd dvdr jack lm-sensors portaudio samba screencast wifi wmf vulkan libnotify djvu ggi vorbis
+	//?desktop: wine-proton wine
+
 
 	/* if !installServer {
 		// useFlags = append(useFlags, []byte(" xorg x11extras wayland gui joystick dbus bluetooth printsupport location ffmpeg multimedia opengl video sound png jpeg webp mp3 mp4 ogg wav svg xml corefonts fontconfig nvidia-drivers nvenc nsplugin")...)

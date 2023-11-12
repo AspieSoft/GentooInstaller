@@ -22,6 +22,8 @@ const distroName = "Empoleos"
 var rsyncMirror = ""
 // var rsyncMirror = "rsync://127.0.0.1/gentoo-portage"
 // var rsyncMirror = "rsync://mirrors.mit.edu/gentoo-portage"
+// var rsyncMirror = "rsync://rsync.us.gentoo.org/gentoo-portage"
+// var rsyncMirror = "rsync://rsync3.us.gentoo.org/gentoo-portage"
 
 const highTemp uint = 64
 const lowTemp uint = 56
