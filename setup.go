@@ -239,6 +239,9 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		" symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
 	)
 
+	//todo: try adding flags: lto graphite (performance)
+	//desktop: xinerama
+
 	//? secureboot
 
 	// jit javascript ruby lua webkit
