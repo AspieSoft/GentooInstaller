@@ -65,12 +65,12 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 			return nil
 		}, true)
 
-		regex.Comp(`(?mi)^\s*Thread(?:\(s\)|)\s+per\s+core(?:\(s\)|)\s*:\s*([0-9]+)\s*$`).RepFunc(cpuInfo, func(data func(int) []byte) []byte {
+		/* regex.Comp(`(?mi)^\s*Thread(?:\(s\)|)\s+per\s+core(?:\(s\)|)\s*:\s*([0-9]+)\s*$`).RepFunc(cpuInfo, func(data func(int) []byte) []byte {
 			if i, err := strconv.Atoi(string(data(1))); err == nil {
 				cpuCores /= uint64(i)
 			}
 			return nil
-		}, true)
+		}, true) */
 
 		if cpuCores == 0 {
 			regex.Comp(`(?mi)^\s*CPU(?:\(s\)|)\s+family\s*:\s*([0-9]+)\s*$`).RepFunc(cpuInfo, func(data func(int) []byte) []byte {
@@ -80,6 +80,9 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 				return nil
 			}, true)
 		}
+
+		// limit to 75% of the cpu threads
+		cpuCores = uint64(float64(cpuCores) * 0.75)
 	}
 
 	installProgress += 200
@@ -116,7 +119,7 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 
 		memTotal /= 1000
 		memTotal++
-		memTotal /= 2
+		// memTotal /= 2
 	}
 
 	installProgress += 200
@@ -132,7 +135,7 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 			if bytes.Contains(data(1), []byte("-j")) {
 				return data(0)
 			}
-			return regex.JoinBytes(`MAKEOPT="-j`, cpuCores, ' ', data(1), '"')
+			return regex.JoinBytes(`MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, ' ', data(1), '"')
 		}, false)
 		if !hasOpt {
 			regex.Comp(`(?m)^FFLAGS=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
@@ -140,7 +143,7 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 					return data(0)
 				}
 				hasOpt = true
-				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, '"')
+				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, ` -l`, cpuCores, ` -l`, cpuCores, ` -l`, cpuCores, ` -l`, cpuCores, '"')
 			}, false)
 		}
 		if !hasOpt {
@@ -149,7 +152,7 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 					return data(0)
 				}
 				hasOpt = true
-				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, '"')
+				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, '"')
 			}, false)
 		}
 		if !hasOpt {
@@ -158,11 +161,11 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 					return data(0)
 				}
 				hasOpt = true
-				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, '"')
+				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, '"')
 			}, false)
 		}
 		if !hasOpt {
-			appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', `MAKEOPT="-j`, cpuCores, '"', '\n'))
+			appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', `MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, '"', '\n'))
 		}
 	}
 
