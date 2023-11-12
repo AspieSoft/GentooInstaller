@@ -391,7 +391,7 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 
 	quickPkgList := map[string]error{
 		`sys-devel/gcc`: nil,
-		`dev-util/cmake`: nil, //? test
+		`dev-util/cmake`: nil,
 		// `dev-libs/json-c`: nil,
 	}
 
@@ -420,6 +420,56 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 	}
 
 	chrootProgressAdd(1000)
+
+	// run emerge -f @world
+	chrootWaitToCool(true)
+	fmt.Println("(chroot) running emerge -f @world...")
+
+	// emerge --autounmask-write @world
+	_, err = bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `--autounmask-write`, `-f`, `@world`}, "/", seLinuxFlags, true, false)
+
+	if err != nil {
+		// etc-update
+		bash.Pipe("/", []string{`echo`, `-e`, `y\n`}, []string{`etc-update`, `--automode`, `-3`})
+
+		// emerge --fetch @world
+		// bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `-f`, `@world`}, "/", seLinuxFlags, true, false)
+	}
+
+	chrootProgressAdd(1000)
+
+	if errSYS != nil {
+		fmt.Println("(chroot) installing @system...")
+		_, errSYS = bash.Run([]string{`quickpkg`, `@system`}, "/", seLinuxFlags, true, false)
+		/* if errSYS != nil {
+			fmt.Println(errors.New("\n(chroot) error: failed to install @system"))
+			fmt.Println("(chroot) trying emerge instead of quicksync...")
+			_, errSYS = bash.Run([]string{`emerge`, `--quiet`, `@system`}, "/", seLinuxFlags, true, false)
+		} */
+		if errSYS != nil {
+			fmt.Println(errors.New("\n(chroot) error: failed to install @system"))
+			// return errors.New("(chroot) error: failed to install @system")
+		}
+		chrootProgressAdd(1000)
+	}
+
+	// retry quickPkgList
+	for pkg, err := range quickPkgList {
+		if err != nil {
+			fmt.Println("(chroot) installing "+pkg+"...")
+			_, err = bash.Run([]string{`quickpkg`, pkg}, "/", seLinuxFlags, true, false)
+			/* if err != nil {
+				fmt.Println(errors.New("(chroot) error: failed to install "+pkg))
+				fmt.Println("(chroot) trying emerge instead of quicksync...")
+				_, err = bash.Run([]string{`emerge`, `--quiet`, pkg}, "/", seLinuxFlags, true, false)
+			} */
+			if err != nil {
+				fmt.Println(errors.New("(chroot) error: failed to install "+pkg))
+				// return errors.New("(chroot) error: failed to install "+pkg)
+			}
+			chrootProgressAdd(1000)
+		}
+	}
 
 	// install ccache
 	if diskParts.home != "" {
@@ -476,55 +526,6 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 	}
 
 	chrootProgressAdd(1000)
-
-	// run emerge -f @world
-	chrootWaitToCool(true)
-	fmt.Println("(chroot) running emerge -f @world...")
-
-	// emerge --autounmask-write @world
-	_, err = bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `--autounmask-write`, `-f`, `@world`}, "/", seLinuxFlags, true, false)
-
-	if err != nil {
-		// etc-update
-		bash.Pipe("/", []string{`echo`, `-e`, `y\n`}, []string{`etc-update`, `--automode`, `-3`})
-
-		// emerge --fetch @world
-		// bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `-f`, `@world`}, "/", seLinuxFlags, true, false)
-	}
-
-	chrootProgressAdd(1000)
-
-	if errSYS != nil {
-		fmt.Println("(chroot) installing @system...")
-		_, errSYS = bash.Run([]string{`quickpkg`, `@system`}, "/", seLinuxFlags, true, false)
-		/* if errSYS != nil {
-			fmt.Println(errors.New("\n(chroot) error: failed to install @system"))
-			fmt.Println("(chroot) trying emerge instead of quicksync...")
-			_, errSYS = bash.Run([]string{`emerge`, `--quiet`, `@system`}, "/", seLinuxFlags, true, false)
-		} */
-		if errSYS != nil {
-			fmt.Println(errors.New("\n(chroot) error: failed to install @system"))
-			// return errors.New("(chroot) error: failed to install @system")
-		}
-		chrootProgressAdd(1000)
-	}
-
-	// retry quickPkgList
-	for pkg, err := range quickPkgList {
-		if err != nil {
-			fmt.Println("(chroot) installing "+pkg+"...")
-			_, err = bash.Run([]string{`quickpkg`, pkg}, "/", seLinuxFlags, true, false)
-			if err != nil {
-				fmt.Println(errors.New("(chroot) error: failed to install "+pkg))
-				fmt.Println("(chroot) trying emerge instead of quicksync...")
-				_, err = bash.Run([]string{`emerge`, `--quiet`, pkg}, "/", seLinuxFlags, true, false)
-			}
-			if err != nil {
-				return errors.New("(chroot) error: failed to install "+pkg)
-			}
-			chrootProgressAdd(1000)
-		}
-	}
 
 	var progressStep uint
 	var cProgress uint
