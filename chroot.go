@@ -391,7 +391,7 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 
 	quickPkgList := map[string]error{
 		`sys-devel/gcc`: nil,
-		// `dev-util/cmake`: nil,
+		`dev-util/cmake`: nil, //? test
 		// `dev-libs/json-c`: nil,
 	}
 
