@@ -111,7 +111,7 @@ func installChroot(){
 		bash.RunRaw(`setenforce 0`, "", nil)
 	}
 
-	err = emergeWorld(includeSELinux)
+	err = emergeWorld(includeSELinux, config.diskParts)
 	if err != nil {
 		panic(err)
 	}
@@ -280,62 +280,6 @@ func chrootInitSetup(locale localeInfo, diskParts diskPartList, tarName string) 
 	// pretend to read the gentoo eselect news, so it stops bugging me to read it
 	bash.Run([]string{`eselect`, `news`, `read`}, "", nil)
 
-	// install ccache
-	if diskParts.home != "" {
-		cacheSize := "2G"
-		if out, err := bash.Run([]string{`lsblk`, `-linbo`, `size`, `/dev/`+diskParts.home}, "", nil); err == nil {
-			if size := goutil.Conv.ToUint(out); size != 0 {
-				size /= 1000 // bytes to kilobytes
-				size /= 1000 // kilobytes to megabytes
-
-				if size > 128000 {
-					cacheSize = "16G"
-				}else if size > 64000 {
-					cacheSize = "8G"
-				}else if size > 32000 {
-					cacheSize = "4G"
-				}else if size < 32000 {
-					cacheSize = ""
-				}
-			}
-		}
-
-		if cacheSize != "" {
-			fmt.Println("(chroot) optimizing performance with ccache...")
-			if errList = install(`dev-util/ccache`); len(errList) == 0 {
-				hasOpt := false
-				regex.Comp(`(?m)^FEAURES="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-					hasOpt = true
-					return regex.JoinBytes(`FEAURES="`, data(1), ` ccache`, `"\nCCACHE_SIZE="`, cacheSize, `"\nCCACHE_DIR="/var/cache/ccache"`)
-				}, false)
-				if !hasOpt {
-					regex.Comp(`(?m)^ACCEPT_LICENSE=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-						hasOpt = true
-						return regex.JoinBytes(data(0), '\n', `FEAURES="${FEAURES}"\nCCACHE_SIZE="`, cacheSize, `"\nCCACHE_DIR="/var/cache/ccache"`)
-					}, false)
-				}
-				if !hasOpt {
-					appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', `FEAURES="${FEAURES}"\nCCACHE_SIZE="`, cacheSize, `"\nCCACHE_DIR="/var/cache/ccache"`, '\n'))
-				}
-
-				os.MkdirAll("/var/cache/ccache", 0644)
-				os.WriteFile("/var/cache/ccache/ccache.conf", regex.JoinBytes(
-					`max_size = `, cacheSize, '\n',
-					`umask = 002`, '\n',
-					`hash_dir = false`, '\n',
-					`cache_dir_levels = 3`, '\n',
-					`compression = true`, '\n',
-					`compression_level = 1`, '\n',
-					'\n',
-					`# Preserve cache across GCC rebuilds`, '\n',
-					`compiler_check = %compiler% -dumpversion`, '\n',
-				), 0644)
-			}
-		}
-	}
-
-	chrootProgressAdd(1000)
-
 	return nil
 }
 
@@ -426,7 +370,7 @@ func chrootSetTimezone(locale localeInfo) error {
 	return nil
 }
 
-func emergeWorld(includeSELinux bool) error {
+func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 	progress := uint(250000)
 
 	var seLinuxFlags []string
@@ -473,6 +417,62 @@ func emergeWorld(includeSELinux bool) error {
 	_, err := bash.Run([]string{`emerge`, `--quiet`, `dev-lang/rust-bin`}, "/", seLinuxFlags, true, false)
 	if err != nil {
 		return errors.New("(chroot) error: failed to install dev-lang/rust-bin")
+	}
+
+	chrootProgressAdd(1000)
+
+	// install ccache
+	if diskParts.home != "" {
+		cacheSize := "2G"
+		if out, err := bash.Run([]string{`lsblk`, `-linbo`, `size`, `/dev/`+diskParts.home}, "", nil); err == nil {
+			if size := goutil.Conv.ToUint(out); size != 0 {
+				size /= 1000 // bytes to kilobytes
+				size /= 1000 // kilobytes to megabytes
+
+				if size > 128000 {
+					cacheSize = "16G"
+				}else if size > 64000 {
+					cacheSize = "8G"
+				}else if size > 32000 {
+					cacheSize = "4G"
+				}else if size < 32000 {
+					cacheSize = ""
+				}
+			}
+		}
+
+		if cacheSize != "" {
+			fmt.Println("(chroot) optimizing performance with ccache...")
+			if errList := install(`dev-util/ccache`); len(errList) == 0 {
+				hasOpt := false
+				regex.Comp(`(?m)^FEAURES="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
+					hasOpt = true
+					return regex.JoinBytes(`FEAURES="`, data(1), ` ccache`, `"\nCCACHE_SIZE="`, cacheSize, `"\nCCACHE_DIR="/var/cache/ccache"`)
+				}, false)
+				if !hasOpt {
+					regex.Comp(`(?m)^ACCEPT_LICENSE=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
+						hasOpt = true
+						return regex.JoinBytes(data(0), '\n', `FEAURES="${FEAURES}"\nCCACHE_SIZE="`, cacheSize, `"\nCCACHE_DIR="/var/cache/ccache"`)
+					}, false)
+				}
+				if !hasOpt {
+					appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', `FEAURES="${FEAURES}"\nCCACHE_SIZE="`, cacheSize, `"\nCCACHE_DIR="/var/cache/ccache"`, '\n'))
+				}
+
+				os.MkdirAll("/var/cache/ccache", 0644)
+				os.WriteFile("/var/cache/ccache/ccache.conf", regex.JoinBytes(
+					`max_size = `, cacheSize, '\n',
+					`umask = 002`, '\n',
+					`hash_dir = false`, '\n',
+					`cache_dir_levels = 3`, '\n',
+					`compression = true`, '\n',
+					`compression_level = 1`, '\n',
+					'\n',
+					`# Preserve cache across GCC rebuilds`, '\n',
+					`compiler_check = %compiler% -dumpversion`, '\n',
+				), 0644)
+			}
+		}
 	}
 
 	chrootProgressAdd(1000)
