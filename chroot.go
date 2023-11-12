@@ -534,7 +534,7 @@ func emergeWorld(includeSELinux bool) error {
 	fmt.Println("(chroot) running emerge @world...")
 
 	//todo: fix gcc and cmake taking forever to install
-	seLinuxFlags = append(seLinuxFlags, `USE=${USE} -gcc -cmake`)
+	// seLinuxFlags = append(seLinuxFlags, `USE=${USE} -gcc -cmake`)
 
 	cmd := exec.Command(`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `@world`)
 	cmd.Dir = "/"
