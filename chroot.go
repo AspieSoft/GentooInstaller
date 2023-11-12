@@ -425,19 +425,65 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 	chrootWaitToCool(true)
 	fmt.Println("(chroot) running emerge -f @world...")
 
-	// emerge --autounmask-write @world
-	_, err = bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `--autounmask-write`, `-f`, `@world`}, "/", seLinuxFlags, true, false)
+	// emerge --autounmask-write --fetch @world
+	_, errWorld := bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `--autounmask-write`, `-f`, `@world`}, "/", seLinuxFlags, true, false)
 
-	if err != nil {
+	retries := 3
+	for errWorld != nil && retries >= 0 {
+		retries--
+
+		// emerge --autounmask-write @world
+		_, errWorld = bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `--autounmask-write`, `@world`}, "/", seLinuxFlags, true, false)
+
 		// etc-update
 		bash.Pipe("/", []string{`echo`, `-e`, `y\n`}, []string{`etc-update`, `--automode`, `-3`})
 
-		// emerge --fetch @world
-		// bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `-f`, `@world`}, "/", seLinuxFlags, true, false)
+		// retry @system
+		if errSYS != nil {
+			chrootWaitToCool(true)
+			fmt.Println("(chroot) installing @system...")
+			_, errSYS := bash.Run([]string{`quickpkg`, `@system`}, "/", seLinuxFlags, true, false)
+			if errSYS != nil {
+				fmt.Println(errors.New("\n(chroot) error: failed to install @system"))
+				fmt.Println("(chroot) will try again later...")
+			}else{
+				chrootProgressAdd(1000)
+			}
+		}
+
+		// retry quickPkgList
+		for pkg, err := range quickPkgList {
+			if err != nil {
+				chrootWaitToCool(true)
+				fmt.Println("(chroot) installing "+pkg+"...")
+				_, err := bash.Run([]string{`quickpkg`, pkg}, "/", seLinuxFlags, true, false)
+				if err != nil {
+					fmt.Println(errors.New("(chroot) error: failed to install "+pkg))
+					fmt.Println("(chroot) will try again later...")
+					quickPkgList[pkg] = err
+				}else{
+					chrootProgressAdd(1000)
+				}
+			}
+		}
+
+		// emerge --autounmask-write --fetch @world
+		if errWorld != nil {
+			_, errWorld = bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `--autounmask-write`, `-f`, `@world`}, "/", seLinuxFlags, true, false)
+		}
+	}
+
+	if errWorld != nil {
+		// emerge --autounmask-write @world
+		_, errWorld = bash.Run([]string{`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `--autounmask-write`, `@world`}, "/", seLinuxFlags, true, false)
+
+		// etc-update
+		bash.Pipe("/", []string{`echo`, `-e`, `y\n`}, []string{`etc-update`, `--automode`, `-3`})
 	}
 
 	chrootProgressAdd(1000)
 
+	// retry @system
 	if errSYS != nil {
 		fmt.Println("(chroot) installing @system...")
 		_, errSYS = bash.Run([]string{`quickpkg`, `@system`}, "/", seLinuxFlags, true, false)
