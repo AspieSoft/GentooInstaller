@@ -190,6 +190,9 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		" brotli gzip zlib",
 		// other
 		" symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
+
+		//?test
+		" -gcc -cmake",
 	)
 
 	//todo: config clamav https://wiki.gentoo.org/wiki/ClamAV
