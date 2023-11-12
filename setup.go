@@ -47,10 +47,17 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 	// also remember the cpu_flags.yml file in the Empoleos-v5-gentoo project
 	// regex.RepFileStr("/mnt/gentoo/etc/portage/make.conf", `(?m)^COMMON_FLAGS="(.*)"$`, []byte(`COMMON_FLAGS="-march=native $1"`), false)
 	regex.Comp(`(?m)^COMMON_FLAGS="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-		if bytes.Contains(data(1), []byte("-march=native")) {
-			return data(0)
+		flags := bytes.Split(data(1), []byte{' '})
+		if !goutil.Contains(flags, []byte("-march=native")) {
+			flags = append([][]byte{[]byte("-march=native")}, flags...)
 		}
-		return regex.JoinBytes(`COMMON_FLAGS="-march=native `, data(1), '"')
+		for i, v := range flags {
+			if regex.Comp(`^-O[0-9]+$`).Match(v) {
+				//todo: remember to change this back to '-O2' after the install
+				flags[i] = []byte("-O3")
+			}
+		}
+		return regex.JoinBytes(`COMMON_FLAGS="`, bytes.Join(flags, []byte{' '}), '"')
 	}, false)
 
 	//todo: experiment with setting '-O3' in place of '-O2' to speed up the install
@@ -121,9 +128,7 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		}
 
 		memTotal /= 1000
-		// memTotal++
-		// memTotal /= 2
-		memTotal--
+		memTotal++
 	}
 
 	installProgress += 200
@@ -133,29 +138,16 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 	}
 
 	if cpuCores != 0 {
-		setPortageOpt("MAKEOPT", func(val []byte) []byte {
-			return regex.JoinBytes(`-j`, cpuCores, ` -l`, cpuCores)
-		})
-
-		setPortageOpt("EMERGE_DEFAULT_OPTS", func(val []byte) []byte {
-			return regex.JoinBytes(`--jobs=`, cpuCores, ` --load-average=`, cpuCores)
-		})
+		setPortageOpt("MAKEOPT", regex.JoinBytes(`-j`, cpuCores, ` -l`, cpuCores), false)
+		setPortageOpt("EMERGE_DEFAULT_OPTS", regex.JoinBytes(`--jobs=`, cpuCores, ` --load-average=`, cpuCores), false)
 	}
 
-	setPortageOpt("FEATURES", func(val []byte) []byte {
-		if len(val) == 0 {
-			return []byte("${FEATURES} parallel-fetch parallel-install sign")
-		}
-		return regex.JoinBytes(val, ` parallel-fetch parallel-install`)
-	})
+	//todo: remember to change this to '1' after the install
+	setPortageOpt("PORTAGE_NICENESS", []byte(`-2`), false)
 
-	setPortageOpt("ACCEPT_KEYWORDS", func(val []byte) []byte {
-		return []byte("~amd64")
-	})
-
-	setPortageOpt("ACCEPT_LICENSE", func(val []byte) []byte {
-		return []byte{'*'}
-	})
+	setPortageOpt("FEATURES", []byte(`${FEATURES} parallel-fetch parallel-install sign`), true)
+	setPortageOpt("ACCEPT_KEYWORDS", []byte(`~amd64`), true)
+	setPortageOpt("ACCEPT_LICENSE", []byte(`*`), false)
 
 	installProgress += 200
 
@@ -252,15 +244,7 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 	// useFlags = append(useFlags, []byte("dbus png jpeg webp gui gtk X libnotify -qt5 joystick opengl sound video bluetooth network multimedia printsupport location")...)
 	// consider adding -netboot to desktop
 
-	setPortageOpt("USE", func(val []byte) []byte {
-		newUse := bytes.Split(val, []byte{' '})
-		for _, val := range bytes.Split(useFlags, []byte{' '}) {
-			if !goutil.Contains(newUse, val) {
-				newUse = append(newUse, val)
-			}
-		}
-		return bytes.Join(newUse, []byte{' '})
-	})
+	setPortageOpt("USE", useFlags, true)
 
 	installProgress += 200
 
@@ -299,17 +283,24 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 }
 
 
-func setPortageOpt(opt string, cb func(val []byte)[]byte){
+func setPortageOpt(opt string, val []byte, merge bool){
 	hasOpt := false
 	regex.Comp(`(?m)^%1="(.*)"$`, opt).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
 		if hasOpt {
 			return data(0)
 		}
 		hasOpt = true
-		val := cb(data(1))
-		if val == nil {
-			return data(0)
+		
+		if merge {
+			newVal := bytes.Split(data(1), []byte{' '})
+			for _, val := range bytes.Split(val, []byte{' '}) {
+				if !goutil.Contains(newVal, val) {
+					newVal = append(newVal, val)
+				}
+			}
+			return bytes.Join(newVal, []byte{' '})
 		}
+
 		return regex.JoinBytes(opt, `="`, val, '"')
 	}, false)
 
@@ -323,18 +314,12 @@ func setPortageOpt(opt string, cb func(val []byte)[]byte){
 				return data(0)
 			}
 			hasOpt = true
-			val := cb([]byte{})
-			if val == nil {
-				return data(0)
-			}
 			return regex.JoinBytes(data(0), '\n', opt, `="`, val, '"')
 		}, false)
 	}
 
 	if !hasOpt {
-		if val := cb([]byte{}); val != nil {
-			appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', opt, `="`, val, '"', '\n'))
-		}
+		appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', opt, `="`, val, '"', '\n'))
 	}
 }
 
