@@ -179,7 +179,7 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		// security
 		" cryptsetup openssl clamav crypt ssl session strip tcmalloc tcpd gcr skey -telemetry",
 		// performance
-		" jit smp sockets dri atm adns vc lto graphite",
+		" jit smp sockets dri atm adns vc lto graphite ccache",
 		// net
 		" dns network ssh ftp sockets soap snmp ipv6 libwww sctp idn",
 		// tools
