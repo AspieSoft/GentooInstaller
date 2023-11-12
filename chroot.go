@@ -539,7 +539,7 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 
 		if cacheSize != "" {
 			fmt.Println("(chroot) optimizing performance with ccache...")
-			if errList := install(`dev-util/ccache`); len(errList) == 0 {
+			if _, err = bash.Run([]string{`emerge`, `--quiet`, `dev-util/ccache`, `--exclude`, `gcc`}, "/", seLinuxFlags); err == nil {
 				hasOpt := false
 				regex.Comp(`(?m)^FEAURES="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
 					hasOpt = true
@@ -583,7 +583,7 @@ func emergeWorld(includeSELinux bool, diskParts diskPartList) error {
 	//todo: fix gcc and cmake taking forever to install
 	// seLinuxFlags = append(seLinuxFlags, `USE=${USE} -gcc -cmake`)
 
-	cmd := exec.Command(`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `@world`)
+	cmd := exec.Command(`emerge`, `--update`, `--deep`, `--newuse`, `--quiet`, `@world`, `--exclude`, `gcc`)
 	cmd.Dir = "/"
 	if includeSELinux {
 		if cmd.Env == nil {

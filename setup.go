@@ -175,11 +175,11 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		// core
 		"boot kernel-install dist-kernel kernel-open modules modules-sign gnuefi efiemu mount nls sdl selinux hardened policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs device-mapper tools truetype overlay container-init -apparmor -qt5 -qtwayland -qtwebenging -webenging",
 		// lang
-		" make pcre curl git python python3 sql sqlite go nodejs java javascript ruby lua webkit",
+		" gcc-symlinks make -cmake pcre curl git python python3 sql sqlite go nodejs java javascript ruby lua webkit",
 		// security
 		" cryptsetup openssl clamav crypt ssl session strip tcmalloc tcpd gcr skey -telemetry",
 		// performance
-		" jit smp sockets dri atm adns vc lto graphite ccache",
+		" smp sockets dri atm adns vc lto graphite ccache",
 		// net
 		" dns network ssh ftp sockets soap snmp ipv6 libwww sctp idn",
 		// tools
@@ -190,9 +190,6 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		" brotli gzip zlib",
 		// other
 		" symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
-
-		//?test
-		" -gcc -cmake",
 	)
 
 	//todo: config clamav https://wiki.gentoo.org/wiki/ClamAV
