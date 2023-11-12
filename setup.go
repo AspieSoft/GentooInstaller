@@ -187,11 +187,11 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		// security
 		" cryptsetup openssl clamav crypt ssl session strip tcmalloc tcpd gcr skey -telemetry",
 		// performance
-		" jit smp sockets dri atm adns vc",
+		" jit smp sockets dri atm adns vc lto graphite",
 		// net
 		" dns network ssh ftp sockets soap snmp ipv6 libwww sctp idn",
 		// tools
-		" utils encode emacs bash-completion geoip geolocation hddtemp scanner readline spell inotify dv",
+		" utils encode emacs bash-completion geoip geolocation hddtemp scanner readline spell inotify fanotify dv",
 		// media
 		" ffmpeg multimedia opengl video sound png jpeg webp webm weba mp3 mp4 ogg wav svga xml corefonts fontconfig gif wavpack cgi fastcgi iconv aac flac tiff",
 		// compression
@@ -199,9 +199,6 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		// other
 		" symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
 	)
-
-	//todo: try adding flags: lto graphite (performance)
-	//desktop: xinerama
 
 	//? secureboot
 
