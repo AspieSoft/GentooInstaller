@@ -135,10 +135,7 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		hasOpt := false
 		regex.Comp(`(?m)^MAKEOPT="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
 			hasOpt = true
-			if bytes.Contains(data(1), []byte("-j")) {
-				return data(0)
-			}
-			return regex.JoinBytes(`MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, ' ', data(1), '"')
+			return regex.JoinBytes(`MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, '"')
 		}, false)
 		if !hasOpt {
 			regex.Comp(`(?m)^FFLAGS=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
