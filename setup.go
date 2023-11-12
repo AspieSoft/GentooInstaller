@@ -52,6 +52,8 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		}
 		return regex.JoinBytes(`COMMON_FLAGS="-march=native `, data(1), '"')
 	}, false)
+	//todo: experiment with setting '-O3' in place of '-O2' to speed up the install
+	// note: this option can sometimes cause compile issues
 
 	installProgress += 500
 
