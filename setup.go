@@ -121,8 +121,9 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		}
 
 		memTotal /= 1000
-		memTotal++
+		// memTotal++
 		// memTotal /= 2
+		memTotal--
 	}
 
 	installProgress += 200
@@ -132,72 +133,29 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 	}
 
 	if cpuCores != 0 {
-		hasOpt := false
-		regex.Comp(`(?m)^MAKEOPT="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-			hasOpt = true
-			return regex.JoinBytes(`MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, '"')
-		}, false)
-		if !hasOpt {
-			regex.Comp(`(?m)^FFLAGS=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-				if hasOpt {
-					return data(0)
-				}
-				hasOpt = true
-				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, ` -l`, cpuCores, ` -l`, cpuCores, ` -l`, cpuCores, ` -l`, cpuCores, '"')
-			}, false)
-		}
-		if !hasOpt {
-			regex.Comp(`(?m)^FCFLAGS=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-				if hasOpt {
-					return data(0)
-				}
-				hasOpt = true
-				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, '"')
-			}, false)
-		}
-		if !hasOpt {
-			regex.Comp(`(?m)^COMMON_FLAGS=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-				if hasOpt {
-					return data(0)
-				}
-				hasOpt = true
-				return regex.JoinBytes(data(0), '\n', `MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, '"')
-			}, false)
-		}
-		if !hasOpt {
-			appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', `MAKEOPT="-j`, cpuCores, ` -l`, cpuCores, '"', '\n'))
-		}
+		setPortageOpt("MAKEOPT", func(val []byte) []byte {
+			return regex.JoinBytes(`-j`, cpuCores, ` -l`, cpuCores)
+		})
+
+		setPortageOpt("EMERGE_DEFAULT_OPTS", func(val []byte) []byte {
+			return regex.JoinBytes(`--jobs=`, cpuCores, ` --load-average=`, cpuCores)
+		})
 	}
 
-	hasOpt := false
-	regex.Comp(`(?m)^ACCEPT_LICENSE="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-		hasOpt = true
-		return []byte(`ACCEPT_LICENSE="*"`)
-	}, false)
-	if !hasOpt {
-		regex.Comp(`(?m)^MAKEOPT=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-			hasOpt = true
-			return regex.JoinBytes(data(0), '\n', `ACCEPT_LICENSE="*"`)
-		}, false)
-	}
-	if !hasOpt {
-		appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', `ACCEPT_LICENSE="*"`, '\n'))
-	}
+	setPortageOpt("FEATURES", func(val []byte) []byte {
+		if len(val) == 0 {
+			return []byte("${FEATURES} parallel-fetch parallel-install sign")
+		}
+		return regex.JoinBytes(val, ` parallel-fetch parallel-install`)
+	})
 
-	hasOpt = false
-	regex.Comp(`(?m)^FEATURES="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-		hasOpt = true
-		return regex.JoinBytes(`FEATURES="`, data(1), ` parallel-fetch`, `"`)
-	}, false)
-	if !hasOpt {
-		regex.Comp(`(?m)^ACCEPT_LICENSE=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-			hasOpt = true
-			return regex.JoinBytes(data(0), '\n', `FEATURES="${FEATURES} parallel-fetch"`)
-		}, false)
-	}
-	if !hasOpt {
-		appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', `FEATURES="${FEATURES} parallel-fetch"`, '\n'))
-	}
+	setPortageOpt("ACCEPT_KEYWORDS", func(val []byte) []byte {
+		return []byte("~amd64")
+	})
+
+	setPortageOpt("ACCEPT_LICENSE", func(val []byte) []byte {
+		return []byte{'*'}
+	})
 
 	installProgress += 200
 
@@ -297,26 +255,15 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 	// useFlags = append(useFlags, []byte("dbus png jpeg webp gui gtk X libnotify -qt5 joystick opengl sound video bluetooth network multimedia printsupport location")...)
 	// consider adding -netboot to desktop
 
-	hasOpt = false
-	regex.Comp(`(?m)^USE="(.*)"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-		hasOpt = true
-		newUse := bytes.Split(data(1), []byte{' '})
+	setPortageOpt("USE", func(val []byte) []byte {
+		newUse := bytes.Split(val, []byte{' '})
 		for _, val := range bytes.Split(useFlags, []byte{' '}) {
 			if !goutil.Contains(newUse, val) {
 				newUse = append(newUse, val)
 			}
 		}
-		return regex.JoinBytes(`USE="`, bytes.Join(newUse, []byte{' '}), '"')
-	}, false)
-	if !hasOpt {
-		regex.Comp(`(?m)^ACCEPT_LICENSE=".*"$`).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
-			hasOpt = true
-			return regex.JoinBytes(data(0), '\n', `USE="`, useFlags, '"')
-		}, false)
-	}
-	if !hasOpt {
-		appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', `USE="`, useFlags, '"', '\n'))
-	}
+		return bytes.Join(newUse, []byte{' '})
+	})
 
 	installProgress += 200
 
@@ -353,6 +300,47 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 
 	return nil
 }
+
+
+func setPortageOpt(opt string, cb func(val []byte)[]byte){
+	hasOpt := false
+	regex.Comp(`(?m)^%1="(.*)"$`, opt).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
+		if hasOpt {
+			return data(0)
+		}
+		hasOpt = true
+		val := cb(data(1))
+		if val == nil {
+			return data(0)
+		}
+		return regex.JoinBytes(opt, `="`, val, '"')
+	}, false)
+
+	for _, flag := range []string{`ACCEPT_LICENSE`, `MAKEOPT`, `FFLAGS`, `FCFLAGS`, `COMMON_FLAGS`} {
+		if hasOpt {
+			break
+		}
+
+		regex.Comp(`(?m)^%1=".*"$`, flag).RepFileFunc("/mnt/gentoo/etc/portage/make.conf", func(data func(int) []byte) []byte {
+			if hasOpt {
+				return data(0)
+			}
+			hasOpt = true
+			val := cb([]byte{})
+			if val == nil {
+				return data(0)
+			}
+			return regex.JoinBytes(data(0), '\n', opt, `="`, val, '"')
+		}, false)
+	}
+
+	if !hasOpt {
+		if val := cb([]byte{}); val != nil {
+			appendToFile("/mnt/gentoo/etc/portage/make.conf", regex.JoinBytes('\n', opt, `="`, val, '"', '\n'))
+		}
+	}
+}
+
 
 func setupFStab(diskParts diskPartList) error {
 	fstab := regex.JoinBytes(
