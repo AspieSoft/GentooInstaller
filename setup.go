@@ -173,11 +173,12 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 
 	useFlags := regex.JoinBytes(
 		// core
-		"boot kernel-install dist-kernel kernel-open modules modules-sign gnuefi efiemu mount nls sdl selinux hardened policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs device-mapper tools truetype overlay container-init -apparmor -qt5 -qtwayland -qtwebenging -webenging",
+		// "boot kernel-install dist-kernel kernel-open modules modules-sign gnuefi efiemu mount nls sdl selinux hardened policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs device-mapper tools truetype overlay container-init -apparmor -qt5 -qtwayland -qtwebenging -webenging",
+		"hardened nls sdl policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs lvm tools truetype overlay container-init -qt -qt5 -qt6 -webengine",
 		// lang
-		" gcc-symlinks make -cmake pcre curl git python python3 sql sqlite go nodejs java javascript ruby lua webkit",
+		" gcc-symlinks make -cmake pcre curl git python python3 sql sqlite go nodejs java javascript ruby lua webkit docker",
 		// security
-		" cryptsetup openssl clamav crypt ssl session strip tcmalloc tcpd gcr skey -telemetry",
+		" cryptsetup openssl clamav ufw crypt ssl session strip tcmalloc tcpd gcr skey -telemetry -dmraid -device-mapper",
 		// performance
 		" smp sockets dri atm adns vc lto graphite ccache",
 		// net
@@ -187,9 +188,10 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		// media
 		" ffmpeg multimedia opengl video sound png jpeg webp webm weba mp3 mp4 ogg wav svga xml corefonts fontconfig gif wavpack cgi fastcgi iconv aac flac tiff",
 		// compression
-		" brotli gzip zlib",
+		" brotli gzip zlib 7zip bzip2",
 		// other
-		" symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
+		" rpm symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
+		//? -tiff -emacs +qt6
 	)
 
 	//todo: config clamav https://wiki.gentoo.org/wiki/ClamAV
@@ -235,9 +237,9 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 	} */
 
 	if strings.Contains(tarName, "openrc") {
-		useFlags = append(useFlags, []byte(" openrc -systemd")...)
+		useFlags = append(useFlags, []byte(" -systemd")...)
 	}else if strings.Contains(tarName, "systemd") {
-		useFlags = append(useFlags, []byte(" systemd -openrc")...)
+		useFlags = append(useFlags, []byte(" systemd")...)
 	}
 
 	installProgress += 200
