@@ -176,7 +176,8 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		// "boot kernel-install dist-kernel kernel-open modules modules-sign gnuefi efiemu mount nls sdl selinux hardened policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs device-mapper tools truetype overlay container-init -apparmor -qt5 -qtwayland -qtwebenging -webenging",
 		"hardened nls sdl policykit resolvconf seccomp sysv-utils tpm xfsprogs btrfs-progs lvm tools truetype overlay container-init -qt -qt5 -qt6 -webengine",
 		// lang
-		" gcc-symlinks make -cmake pcre curl git python python3 sql sqlite go nodejs java javascript ruby lua webkit docker",
+		// " gcc-symlinks make -cmake pcre curl git python python3 sql sqlite go nodejs java javascript ruby lua webkit docker",
+		" gcc-symlinks make -cmake pcre curl git python python3 sql sqlite go nodejs java javascript lua webkit docker",
 		// security
 		" cryptsetup openssl clamav ufw crypt ssl session strip tcmalloc tcpd gcr skey -telemetry -dmraid -device-mapper",
 		// performance
@@ -191,7 +192,8 @@ func setupInstall(diskParts diskPartList, cpu cpuType, tarName string) error {
 		" brotli gzip zlib 7zip bzip2",
 		// other
 		" rpm symlink cxx cvs magic icu acpi djvu expat exif tidy xattr",
-		//? -tiff -emacs +qt6
+		//! -tiff -emacs +qt6
+		//? -ruby
 	)
 
 	//todo: config clamav https://wiki.gentoo.org/wiki/ClamAV
