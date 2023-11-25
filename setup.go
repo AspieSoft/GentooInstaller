@@ -590,7 +590,7 @@ func setupChroot(diskParts diskPartList, locale localeInfo, cpu cpuType, install
 	waitToCool(false)
 
 	// cache new build
-	/* bash.Run([]string{`tar`, `-cpf`, `cache/`+distroName+`.tar.xz`, `-C`, `/mnt/gentoo`, `.`, `--xattrs-include='*.*'`, `--numeric-owner`}, rootDir, nil)
+	/* bash.Run([]string{`tar`, `-cpf`, `cache/`+distroName+`.tar.xz`, `--xattrs-include='*.*'`, `--numeric-owner`, `--exclude=.cache`, `--exclude=.tmp`, `--exclude=.history`, `--exclude=lost+found`, `--exclude=/tmp/*`, `--exclude-caches-all`, `-C`, `/mnt/gentoo`, `.`}, rootDir, nil)
 
 	time.Sleep(1 * time.Second)
 
